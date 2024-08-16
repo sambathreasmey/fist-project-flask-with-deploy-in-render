@@ -1,10 +1,91 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>My Flask App</title>
+<title>WebSocket</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<!--<script src="https://telegram.org/js/telegram-web-app.js"></script>-->
+<!--    <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>-->
 </head>
 <body>
-    <h1>Welcome to my Flask App!</h1>
-    <p>This is a simple Flask application.</p>
+    <div style="text-align: center;">
+        <span style="color: blue; font-size: 60px;">Crypto </span> <span style="color: orange; font-size: 60px;">Market</span>
+    </div>
+    <div style="font-size: 60px;" id="my_list" class="my_list"></div>
+     <div class='api'>" + symbol + "</div>
+
+<script>
+  // Client-side JavaScript (using jQuery)
+
+$(document).ready(function() {
+  // WebSocket connection
+  var socket = new WebSocket('wss://stream.binance.com/stream');
+  var params = [
+      "btcusdt@aggTrade",
+      "ethusdt@aggTrade",
+      "bnbusdt@aggTrade",
+      "dogeusdt@aggTrade",
+      "adausdt@aggTrade",
+      "notusdt@aggTrade",
+      "sandusdt@aggTrade",
+      "arbusdt@aggTrade",
+      "xrpusdt@aggTrade",
+      "maticusdt@aggTrade",
+      "tonusdt@aggTrade",
+      "shibausdt@aggTrade",
+      "solusdt@aggTrade"
+    ]
+  var skiped = false;
+
+  // Handle connection open event
+  socket.onopen = function(event) {
+    console.log("WebSocket connection opened");
+
+    // Send a request to the server
+    var requestData = {"method":"SUBSCRIBE",
+    "params": params,
+    "id":1};
+    socket.send(JSON.stringify(requestData));
+  };
+
+  // Handle message received event
+  socket.onmessage = function(event) {
+    var data = JSON.parse(event.data);
+
+    if (!skiped) {
+      skiped = true;
+    } else {
+      params.forEach(function(param) {
+        const param_text = param.replace(/usdt@aggTrade/gi, "");
+        if (data['data']['s'] == param_text.toUpperCase() + "USDT") {
+          console.log(param_text.toUpperCase() + "USDT" + " : " + data['data']['p'])
+          $('#'+param_text+'usdt').val(data['data']['p']);
+          $('.api').html(data['data']['s']);
+        }
+      });
+    }
+
+  };
+
+  // Handle connection close event
+  socket.onclose = function(event) {
+    console.log("WebSocket connection closed");
+  };
+
+  params.forEach(function(param) {
+    const param_text = param.replace(/usdt@aggTrade/gi, "");
+    var symbol = param_text.toUpperCase();
+    var id = param_text;
+    $("#my_list").append(
+      `<div style='align-items: center; display: flex; justify-content: space-between; width: 200px;'><img style='height: 60px;' crossorigin='' src='https://s3-symbol-logo.tradingview.com/crypto/XTVC` + symbol + `.svg' alt=''><span style="color: white; font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;">` + symbol + `</span></div>`,
+      "<input style='color: green; font-size: 40px; border-color: transparent; margin-bottom: 25px; width: 100%;' type='text' id='" + id + "usdt' placeholder='loading' disabled>"
+    );
+  });
+
+});
+
+</script>
+
+
+
 </body>
 </html>
